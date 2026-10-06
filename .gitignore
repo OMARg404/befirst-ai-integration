@@ -1,3 +1,89 @@
 .DS_Store
 node_modules/
 *.log
+# >>> server-backup (managed by /root/github-backup — متعدلش جوه البلوك ده)
+# ── باكدجات بتتحمل بالـ install (مش كود) ──
+node_modules/
+venv/
+.venv/
+.venv_*/
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+dist-ssr/
+build/
+bin/
+obj/
+publish/
+.next/
+.cache/
+
+# ── أسرار ومفاتيح ──
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+planB.json
+planC.json
+api_keys.json
+client_secret*.json
+token.json
+credentials*.json
+service-account*.json
+
+# ── داتا / داتابيز / رفع المستخدمين / لوجات ──
+data/
+uploads/
+admin_uploads/
+logs/
+*.log
+output/
+workspace/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.dump
+*.sql.gz
+
+# ── موديلات وإندكسات ──
+*.dat
+faiss_index*/
+books_index/
+authoritative_index/
+ocr_cache/
+*.faiss
+*.pkl
+*.npy
+*.pt
+*.onnx
+*.safetensors
+*.gguf
+
+# ── ميديا ومستندات وأرشيفات ──
+*.pdf
+*.doc
+*.docx
+*.xlsx
+*.xls
+*.csv
+*.mp4
+*.mov
+*.mp3
+*.wav
+*.jfif
+*.zip
+*.rar
+*.tar
+*.tar.gz
+*.tgz
+
+# ── متفرقات ──
+.claude/
+*.bak
+*.bak-*
+.DS_Store
+# <<< server-backup

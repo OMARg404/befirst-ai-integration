@@ -27,7 +27,7 @@
       photo: "img/jawad.jpg?v=2",
       thumb: "img/jawad-sm.jpg?v=2",
       endpoint: "/ask-by-question-id-chemistry-stream",
-      greeting: "أهلاً بيك 👋 أنا عبدالجواد AI. ابعتلي أي سؤال كيمياء — اكتبه أو صوّره — وهشرحهولك خطوة بخطوة.",
+      greeting: "أهلاً بيك، أنا عبدالجواد AI. ابعتلي أي سؤال كيمياء — اكتبه أو صوّره — وهشرحهولك خطوة بخطوة.",
       suggestions: ["اشرحلي الرابطة التساهمية ببساطة", "إزاي أوزن معادلة كيميائية؟", "إيه الفرق بين الحمض والقاعدة؟"],
     },
     elbasha: {
@@ -36,7 +36,7 @@
       photo: "img/elbasha.jpg",
       thumb: "img/elbasha-sm.jpg",
       endpoint: "/ask-by-question-id-history-stream",
-      greeting: "أهلاً بيك 👋 أنا الباشا AI. اسألني في أي درس تاريخ أو ابعت صورة السؤال، ونذاكره سوا.",
+      greeting: "أهلاً بيك، أنا الباشا AI. اسألني في أي درس تاريخ أو ابعت صورة السؤال، ونذاكره سوا.",
       suggestions: ["لخصلي أسباب الحملة الفرنسية", "إيه أهم إنجازات محمد علي؟", "ذاكرلي الدرس ده في نقط"],
     },
   };
@@ -74,7 +74,7 @@
     const q = msgs.find((m) => m.role === "user");
     if (!q) return "محادثة";
     const t = (q.text || "").trim();
-    return t && t !== "جاوب على الصورة" ? t.slice(0, 60) : "📷 صورة سؤال";
+    return t && t !== "جاوب على الصورة" ? t.slice(0, 60) : "صورة سؤال";
   };
   // الإصدار الأول كان بيحفظ محادثة واحدة لكل مدرس — بنحوّلها لأول عنصر في القايمة
   function migrate(t) {
@@ -119,8 +119,9 @@
     b.className = "teacher";
     b.type = "button";
     b.innerHTML = `
-      <span class="arch"><img src="${t.photo}" alt="${t.name}"></span>
-      <span class="name-pill">${t.name}</span>
+      <span class="frame"><span class="arch"><img src="${t.photo}" alt="${t.name}"></span></span>
+      <span class="plinth" aria-hidden="true"></span>
+      <span class="t-name">${t.name}</span>
       <span class="subject">${t.subject}</span>
       <span class="start">ابدأ المحادثة</span>
       <span class="past" data-count="${id}"></span>`;
@@ -160,7 +161,8 @@
     $("chatAvatar").src = T.thumb;
     $("chatAvatar").alt = T.name;
     $("chatName").textContent = T.name;
-    $("chatSubject").textContent = `${T.subject} · مدرس AI`;
+    $("chatSubject").innerHTML = `<span class="live" aria-hidden="true"></span>`;
+    $("chatSubject").append(`مدرس ${T.subject} الذكي`);
     $("drawerSub").textContent = `مع ${T.name}`;
     home.hidden = true;
     chat.hidden = false;
@@ -263,7 +265,7 @@
       item.innerHTML = `
         <button class="history-open" type="button">
           <span class="history-title"></span>
-          <span class="history-meta">${timeLabel(c.updated)} · ${questions === 1 ? "سؤال" : questions + " أسئلة"}</span>
+          <span class="history-meta"><span>${timeLabel(c.updated)}</span><span>${questions === 1 ? "سؤال واحد" : questions + " أسئلة"}</span></span>
         </button>
         <button class="history-del" type="button" aria-label="امسح المحادثة دي" title="امسح">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>
@@ -355,7 +357,7 @@
       im.addEventListener("click", () => window.open(im.src, "_blank"));
       b.appendChild(im);
     } else if (m.hadImage) {
-      b.insertAdjacentHTML("beforeend", `<div class="who-sub">📷 صورة سؤال</div>`);
+      b.insertAdjacentHTML("beforeend", `<span class="photo-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>صورة سؤال</span>`);
     }
     if (m.text && m.text !== "جاوب على الصورة") b.appendChild(document.createTextNode(m.text));
   }
