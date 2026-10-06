@@ -403,3 +403,21 @@ button { -webkit-tap-highlight-color: transparent; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* ── شاشة الترحيب في محادثة جديدة ── */
+.welcome {
+  margin: auto; padding: 18px 0 8px; max-width: 520px; width: 100%;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  animation: rise 0.7s var(--ease) both;
+}
+.welcome-frame { width: 132px; padding: 5px; animation: frame-draw 1.4s var(--ease) both; }
+.welcome-frame::before { inset: 3px; }
+.welcome-frame::after { inset: 5px; }
+.welcome-name {
+  margin-top: 16px; font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1.3;
+  background: var(--leaf-soft); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.welcome-sub { color: var(--muted); font-size: 14px; }
+.welcome-text { margin: 16px 0 22px; color: var(--ivory); font-size: 16.5px; max-width: 30em; }
+.welcome-suggestions { align-self: center; justify-content: center; margin: 0; max-width: 100%; }
+@media (max-width: 560px) { .welcome-frame { width: 112px; } .welcome-name { font-size: 23px; } }

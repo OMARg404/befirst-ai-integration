@@ -362,22 +362,33 @@
     if (m.text && m.text !== "جاوب على الصورة") b.appendChild(document.createTextNode(m.text));
   }
 
+  // محادثة جديدة فاضية = شاشة ترحيب (بورتريه المدرس + اقتراحات) بدل فقاعة صغيرة وفراغ تحتها
+  function renderWelcome(T) {
+    const w = document.createElement("div");
+    w.className = "welcome";
+    w.innerHTML = `
+      <span class="frame welcome-frame"><span class="arch"><img src="${T.photo}" alt=""></span></span>
+      <div class="welcome-name">${T.name}</div>
+      <div class="welcome-sub">مدرس ${T.subject} الذكي</div>
+      <p class="welcome-text"></p>
+      <div class="suggestions welcome-suggestions"></div>`;
+    w.querySelector(".welcome-text").textContent = T.greeting;
+    const s = w.querySelector(".suggestions");
+    for (const q of T.suggestions) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = q;
+      b.addEventListener("click", () => { input.value = q; send(); });
+      s.appendChild(b);
+    }
+    list.appendChild(w);
+  }
+
   function renderAll() {
     list.innerHTML = "";
     const T = TEACHERS[conv.teacher];
+    if (!conv.messages.length) return renderWelcome(T);
     fillBot(row("bot"), T.greeting, { actions: false });
-    if (!conv.messages.length) {
-      const s = document.createElement("div");
-      s.className = "suggestions";
-      for (const q of T.suggestions) {
-        const b = document.createElement("button");
-        b.type = "button";
-        b.textContent = q;
-        b.addEventListener("click", () => { input.value = q; send(); });
-        s.appendChild(b);
-      }
-      list.appendChild(s);
-    }
     for (const m of conv.messages) {
       if (m.role === "user") fillUser(row("user"), m);
       else fillBot(row("bot"), m.text, { error: !!m.error });
@@ -496,7 +507,8 @@
       input.style.height = "auto";
       pendingFile = null;
       preview.hidden = true;
-      list.querySelector(".suggestions")?.remove();
+      // أول سؤال: شاشة الترحيب بتتحول لمحادثة عادية تبدأ بتحية المدرس
+      if (list.querySelector(".welcome")) { list.innerHTML = ""; fillBot(row("bot"), TEACHERS[c.teacher].greeting, { actions: false }); }
       const m = { role: "user", text, hadImage: !!file, localImage: file ? URL.createObjectURL(file) : null };
       c.messages.push(m);
       fillUser(row("user"), m);

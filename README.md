@@ -6,6 +6,14 @@
 - **النسخة الشغالة دلوقتي:** https://aiservice.magacademy.co/befirst-ai/
 - **الـ API:** `https://aiservice.magacademy.co` (مفتوح CORS لأي دومين، مش محتاج مفاتيح)
 
+![الشاشة الرئيسية](docs/home-desktop.jpg)
+
+<p>
+  <img src="docs/home-mobile.jpg" width="230" alt="الرئيسية على الموبايل">
+  <img src="docs/welcome-mobile.jpg" width="230" alt="بداية محادثة">
+  <img src="docs/answer-mobile.jpg" width="230" alt="رد المدرس">
+</p>
+
 ---
 
 ## ⚡ الخلاصة في 30 ثانية
