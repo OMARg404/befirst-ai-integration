@@ -1,0 +1,302 @@
+
+/* ── فورمات رسايل المدرسين: نفس chatFormatter.css بتاع المنصة بالظبط، والمتغيرات
+      متربوطة بألوان Be First (أسود + ذهبي) بدل ألوان المنصة الأصلية ── */
+.custom-message-content {
+  --text-primary: var(--text);
+  --text-secondary: var(--muted);
+  --brand-primary: var(--gold);
+  --brand-primary-2: var(--gold-hi);
+  --brand-primary-rgb: 194, 150, 77;
+  --brand-accent: var(--gold-2);
+  --brand-accent-rgb: 216, 168, 62;
+  --brand-pink: #e7b56a;
+  --brand-gradient: linear-gradient(180deg, var(--gold-hi), var(--gold-2));
+  --content-amber-text: #fdca7c;
+  --content-pink-text: #f3d9ae;
+  --content-purple-text: #ffe0a3;
+  --content-cyan-text: #ffe697;
+  --content-code-text: #f5f1e8;
+  --content-inline-code-text: #fdca7c;
+  --bg-canvas: #0c0a06;
+  --bg-surface-3: #1b1710;
+  --border-soft: rgba(194, 150, 77, 0.25);
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --shadow-md: 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+}
+/* ================= محتوى رسالة الـ AI المُنسّق ================= */
+
+.custom-message-content {
+  direction: rtl;
+  text-align: right;
+  overflow-x: hidden;
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text-primary);
+}
+
+/* ================= Headings ================= */
+
+.chat-heading {
+  font-weight: 700;
+  margin: 6px 0 2px;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.chat-heading.h1 { font-size: 1.3rem; }
+.chat-heading.h2 { font-size: 1.15rem; }
+.chat-heading.h3 { font-size: 1.02rem; color: var(--brand-primary-2); }
+
+/* ================= Paragraphs ================= */
+
+.chat-paragraph {
+  font-size: 0.93rem;
+  line-height: 1.7;
+  margin: 0;
+  padding: 0;
+  color: var(--text-primary);
+}
+
+.chat-italic {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.chat-subtitle {
+  color: var(--brand-primary-2);
+  font-weight: 600;
+}
+
+/* ================= Scientific Card 🔹 ================= */
+
+.chat-scientific {
+  background: rgba(var(--brand-primary-rgb), 0.1);
+  border-right: 3px solid var(--brand-primary);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* ================= Funny 🎭 ================= */
+
+.chat-funny {
+  background: rgba(var(--brand-accent-rgb), 0.1);
+  border-right: 3px solid var(--brand-accent);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-style: italic;
+  color: var(--content-amber-text);
+}
+
+/* ================= Tip Card 💡 ================= */
+
+.chat-tip-paragraph {
+  background: rgba(var(--brand-primary-rgb), 0.08);
+  border-right: 3px solid var(--brand-pink);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  color: var(--content-pink-text);
+}
+
+/* ================= Step Card (default paragraphs) ================= */
+
+.card-step {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  font-weight: 400;
+  color: var(--text-primary);
+  display: block;
+}
+
+/* ================= Math Card ================= */
+
+.chat-math-card {
+  background: rgba(var(--brand-accent-rgb), 0.08);
+  border-right: 3px solid var(--brand-accent);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-family: "Fira Code", monospace;
+  font-size: 0.87rem;
+  font-weight: 500;
+  color: var(--content-amber-text);
+}
+
+/* ================= Inline Math ================= */
+
+.chat-inline-math {
+  background: rgba(var(--brand-accent-rgb), 0.15);
+  color: var(--content-amber-text);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.87rem;
+  font-family: "Fira Code", monospace;
+}
+
+/* ================= Highlights ================= */
+
+.chat-inline-highlight {
+  background: rgba(var(--brand-primary-rgb), 0.15);
+  color: var(--brand-primary-2);
+  padding: 0 4px;
+  border-radius: 3px;
+  font-weight: 500;
+  font-size: 0.9em;
+}
+
+.chat-inline-highlight-important {
+  background: rgba(var(--brand-primary-rgb), 0.2);
+  color: var(--content-purple-text);
+  padding: 0 4px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.chat-inline-number {
+  color: var(--content-cyan-text);
+  font-weight: 600;
+  font-family: "Fira Code", monospace;
+  font-size: 0.88em;
+}
+
+/* ================= Code ================= */
+
+.chat-code {
+  background: var(--bg-canvas);
+  color: var(--content-code-text);
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-family: "Fira Code", monospace;
+  font-size: 0.84rem;
+  overflow-x: auto;
+  border: 1px solid var(--border-soft);
+  line-height: 1.6;
+  direction: ltr;
+  text-align: left;
+}
+
+.chat-inline-code {
+  background: var(--bg-surface-3);
+  color: var(--content-inline-code-text);
+  padding: 0 5px;
+  border-radius: 4px;
+  font-family: "Fira Code", monospace;
+  font-size: 0.84em;
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* ================= HTML Frame (رسم توضيحي / صورة) ================= */
+
+.chat-html-frame {
+  /* إطار مضبوط الحجم للرسم/الصورة — محدود بعرض وارتفاع الرسالة العادية،
+     مش شكل بلوك HTML خام مفتوح، ومش متصغّر أوي لدرجة إنه يبوظ الصور
+     الطولية (طويلة أكتر منها عريضة). */
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 6px 0;
+  padding: 8px;
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+}
+
+.chat-html-frame img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(380px, 100%);
+  max-height: 380px; /* بيحمي الصور الطولية من إنها تاخد مساحة رأسية ضخمة */
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: #eef0f5; /* لون خلفية لحد ما الصورة تحمّل */
+}
+
+.chat-html-frame svg {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+  max-width: min(380px, 100%);
+  background: #ffffff;
+}
+
+.chat-html-frame div { max-width: 100%; overflow: hidden; }
+.chat-html-frame * { color: #14161f; box-sizing: border-box; }
+
+/* ================= أزرار تكبير/تحميل الصورة ================= */
+
+.chat-image-actions-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.chat-image-actions {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  gap: 6px;
+  opacity: 0.85;
+}
+
+.chat-image-action {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(10, 11, 18, 0.65);
+  color: #fff !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  text-decoration: none;
+  backdrop-filter: blur(2px);
+}
+
+.chat-image-action:hover {
+  background: var(--brand-primary);
+  opacity: 1;
+}
+
+/* ================= Answer Highlight ================= */
+
+.chat-answer-highlight {
+  background: rgba(var(--brand-accent-rgb), 0.16);
+  border-right: 3px solid var(--brand-accent);
+  color: var(--content-amber-text) !important;
+  padding: 8px 14px 8px 10px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.96rem;
+}
+
+/* ================= Streaming cursor ================= */
+
+.streaming-cursor {
+  display: inline-block;
+  width: 3px;
+  height: 1em;
+  background: var(--brand-gradient);
+  vertical-align: text-bottom;
+  border-radius: 2px;
+  animation: blink-caret 0.9s steps(2) infinite;
+}
+
+@keyframes blink-caret {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
+}
