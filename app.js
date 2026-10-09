@@ -106,9 +106,12 @@
   const home = $("home"), chat = $("chat"), list = $("messages"), input = $("input");
   const fileInput = $("fileInput"), preview = $("preview"), previewImg = $("previewImg"), sendBtn = $("sendBtn");
 
-  // المحادثة المفتوحة: { teacher, id (notebook_id أو null لمحادثة جديدة), messages: [{role, text, image}] }
+  // المحادثة المفتوحة: { teacher, id (notebook_id أو null لمحادثة جديدة), messages: [{role, text, image, ts, reply_to}] }
+  //   ts = timestamp الرسالة على السيرفر (هو الـ id بتاعها، وبيرجع في /v2/chat وفي SSE)
+  //   reply_to = { ts, role: "user"|"assistant", excerpt, has_image } لو الرسالة ريبلاي على رسالة قديمة
   let conv = null;
   let pendingFile = null;
+  let replyTarget = null; // ↩️ الرسالة اللي الطالب بيرد عليها دلوقتي (زي ريبلاي واتساب)
   let busy = false;
 
   // ═════════════ الشاشة الرئيسية ═════════════
@@ -193,11 +196,12 @@
       const data = await res.json();
       const msgs = (data.chat || []).map((m) => {
         const imgs = Array.isArray(m.images) ? m.images : [];
-        if (m.role === "user") return { role: "user", text: m.text || "", image: m.image || imgs[0] || null };
+        const meta = { ts: m.timestamp || null, reply_to: m.reply_to || null };
+        if (m.role === "user") return { role: "user", text: m.text || "", image: m.image || imgs[0] || null, ...meta };
         let text = m.text || "";
         // شاتات قديمة: رابط الرسم محفوظ في images بس مش جوه النص (نفس فيكس mapStoredMessage في المنصة)
         if (!/<img\b/i.test(text) && imgs.length) text += imgs.map((src) => `\n<img src="${src}" alt="رسم توضيحي">`).join("");
-        return { role: "bot", text };
+        return { role: "bot", text, ...meta };
       });
       if (!msgs.length || conv !== c || busy) return;
       c.messages = msgs;
@@ -295,9 +299,10 @@
     return DOMPurify.sanitize(html, { ADD_ATTR: ["target", "download"] });
   }
 
-  function row(role) {
+  function row(role, m) {
     const r = document.createElement("div");
     r.className = `row ${role}`;
+    if (m) { r._msg = m; if (m.ts) r.dataset.ts = m.ts; }
     if (role === "bot") {
       const a = document.createElement("img");
       a.className = "row-avatar";
@@ -308,6 +313,7 @@
     const b = document.createElement("div");
     b.className = `msg ${role}`;
     r.appendChild(b);
+    if (m) addReplyButton(r);
     list.appendChild(r);
     return b;
   }
@@ -348,6 +354,7 @@
 
   function fillUser(b, m) {
     b.textContent = "";
+    if (m.reply_to) b.appendChild(quoteEl(m.reply_to));
     const src = m.localImage || m.image;
     if (src) {
       const im = document.createElement("img");
@@ -390,8 +397,8 @@
     if (!conv.messages.length) return renderWelcome(T);
     fillBot(row("bot"), T.greeting, { actions: false });
     for (const m of conv.messages) {
-      if (m.role === "user") fillUser(row("user"), m);
-      else fillBot(row("bot"), m.text, { error: !!m.error });
+      if (m.role === "user") fillUser(row("user", m), m);
+      else fillBot(row("bot", m), m.text, { error: !!m.error });
     }
     scrollDown(true);
   }
@@ -498,6 +505,8 @@
   async function send(retry) {
     const text = retry ? retry.text : input.value.trim();
     const file = retry ? retry.file : pendingFile;
+    const reply = retry ? retry.reply : replyTarget;
+    let userMsg = retry ? retry.userMsg : null, userRow = retry ? retry.userRow : null;
     if (busy || (!text && !file) || !conv) return;
     const c = conv; // نثبّت المحادثة دي حتى لو الطالب فتح محادثة تانية أثناء الرد
 
@@ -509,9 +518,13 @@
       preview.hidden = true;
       // أول سؤال: شاشة الترحيب بتتحول لمحادثة عادية تبدأ بتحية المدرس
       if (list.querySelector(".welcome")) { list.innerHTML = ""; fillBot(row("bot"), TEACHERS[c.teacher].greeting, { actions: false }); }
-      const m = { role: "user", text, hadImage: !!file, localImage: file ? URL.createObjectURL(file) : null };
+      const m = { role: "user", text, hadImage: !!file, localImage: file ? URL.createObjectURL(file) : null, reply_to: replyTarget };
       c.messages.push(m);
-      fillUser(row("user"), m);
+      userMsg = m;
+      const ub = row("user", m); // row() بيرجّع الفقاعة؛ الـ ts بيتحط على الـ row نفسه
+      userRow = ub.parentElement;
+      fillUser(ub, m);
+      clearReply();
     }
     updateSend();
 
@@ -526,8 +539,10 @@
     if (c.id) fd.append("notebook_id", c.id);
     for (const [k, v] of Object.entries(student)) if (v) fd.append(k, v);
     if (file) fd.append("image", file, file.name || "question.jpg");
+    // 🔌 ريبلاي: بنبعت الـ ts بتاع الرسالة بس، والسيرفر بيجيب نصها وصورتها من نفس المحادثة بنفسه
+    if (reply && reply.ts) fd.append("reply_to_ts", reply.ts);
 
-    let answer = "", errorMsg = "", frame = 0;
+    let answer = "", errorMsg = "", frame = 0, botTs = null;
     const paint = () => { frame = 0; if (conv === c) { fillBot(b, answer, { done: false }); scrollDown(); } };
 
     try {
@@ -549,6 +564,9 @@
           let ev;
           try { ev = JSON.parse(payload); } catch { continue; }
           if (ev.notebook_id && !c.id) c.id = ev.notebook_id;
+          // ids الرسايل على السيرفر: بيخلّوها قابلة للريبلاي فورًا من غير ريفريش
+          if (ev.user_ts && userMsg) { userMsg.ts = ev.user_ts; if (ev.reply_to) userMsg.reply_to = ev.reply_to; setRowTs(userRow, ev.user_ts); }
+          if (ev.bot_ts) botTs = ev.bot_ts;
           if (ev.error) errorMsg = ev.error;
           if (ev.chunk) { answer += ev.chunk; if (!frame) frame = requestAnimationFrame(paint); }
         }
@@ -559,18 +577,120 @@
 
     if (frame) cancelAnimationFrame(frame);
     if (answer.trim()) {
-      c.messages.push({ role: "bot", text: answer });
-      if (conv === c) fillBot(b, answer);
+      const botMsg = { role: "bot", text: answer, ts: botTs };
+      c.messages.push(botMsg);
+      if (conv === c) { fillBot(b, answer); b.parentElement._msg = botMsg; setRowTs(b.parentElement, botTs); addReplyButton(b.parentElement); }
       // الرابط يشاور على المحادثة دي (من غير ما يعيد فتحها) عشان التحديث والرجوع يفتحوها هي
       if (conv === c && c.id && location.hash !== `#${c.teacher}/${c.id}`) history.replaceState(null, "", `#${c.teacher}/${c.id}`);
     } else {
       const msg = (errorMsg || "حصلت مشكلة ومقدرتش أرد. جرب تبعت السؤال تاني.").replace(/^❌\s*/, "");
-      if (conv === c) fillBot(b, msg, { error: true, onRetry: () => { b.parentElement.remove(); send({ text, file }); } });
+      if (conv === c) fillBot(b, msg, { error: true, onRetry: () => { b.parentElement.remove(); send({ text, file, reply, userMsg, userRow }); } });
     }
     upsertChat(c.teacher, c.id, c.messages.map(({ localImage, ...m }) => m));
     busy = false;
     updateSend();
     if (conv === c) { renderHistory(); scrollDown(); }
+  }
+
+  // ═════════════ ↩️ الريبلاي على رسالة قديمة (زي واتساب) ═════════════
+  // الطالب بيختار أي رسالة (سؤاله أو رد المدرس، نص أو صورة) ويكمل عليها، والمدرس يفتكر سياقها
+  // من غير ما الطالب يبعت الصورة تاني أو ينسخ الكلام. السيرفر بيجيب الرسالة نفسها بالـ ts.
+  const replyBar = $("replyBar");
+  const who = (role) => (role === "user" ? "إنت" : `${TEACHERS[conv.teacher].name.replace(/^م\//, "")} AI`);
+  const plain = (t) => String(t || "").replace(/<svg[\s\S]*?<\/svg>/gi, " ").replace(/<img\b[^>]*>/gi, " [رسم] ")
+    .replace(/<[^>]+>/g, " ").replace(/\*\*|__|`|^\s*#+\s*/gm, "").replace(/\*\(جاري تحضير الرسم التوضيحي\.\.\.\)\*/g, "")
+    .replace(/[🔹🔸💡📌✅❌⚠️🎯✨]/gu, "").replace(/\s+/g, " ").trim();
+  const targetOf = (m) => ({
+    ts: m.ts,
+    role: m.role === "user" ? "user" : "assistant",
+    excerpt: (m.role === "user" && m.text === "جاوب على الصورة" ? "" : plain(m.text)).slice(0, 160) || (m.image || m.localImage || m.hadImage ? "صورة" : ""),
+    has_image: m.role === "user" && !!(m.image || m.localImage || m.hadImage),
+    thumb: m.role === "user" ? (m.localImage || m.image || null) : null,
+  });
+
+  function quoteEl(q) {
+    const el = document.createElement("button");
+    el.type = "button";
+    el.className = "quote " + (q.role === "user" ? "q-user" : "q-bot");
+    el.innerHTML = `<span class="q-who"></span><span class="q-text"></span>`;
+    el.querySelector(".q-who").textContent = who(q.role);
+    el.querySelector(".q-text").textContent = (q.has_image ? "📷 " : "") + (q.excerpt || "صورة");
+    el.setAttribute("aria-label", `روح للرسالة الأصلية: ${q.excerpt || "صورة"}`);
+    el.addEventListener("click", (e) => { e.stopPropagation(); jumpTo(q.ts); });
+    return el;
+  }
+  function jumpTo(ts) {
+    const target = ts && list.querySelector(`.row[data-ts="${CSS.escape(ts)}"]`);
+    if (!target) return;
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    target.classList.remove("flash"); void target.offsetWidth; target.classList.add("flash");
+  }
+  function setRowTs(r, ts) {
+    if (!r || !ts) return;
+    r.dataset.ts = ts;
+    const btn = r.querySelector(".reply-btn");
+    if (btn) btn.hidden = false;
+  }
+  function addReplyButton(r) {
+    if (!r || r.querySelector(".reply-btn")) return;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "reply-btn";
+    btn.setAttribute("aria-label", "رد على الرسالة دي");
+    btn.title = "رد";
+    btn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 8V4L3 11l7 7v-4c5 0 8.5 1.6 11 5-1-5-4-10-11-11z"/></svg>`;
+    btn.hidden = !r.dataset.ts;
+    btn.addEventListener("click", () => r._msg && startReply(r._msg));
+    r.appendChild(btn);
+    enableSwipe(r);
+  }
+  function startReply(m) {
+    if (!m || !m.ts) return;
+    replyTarget = targetOf(m);
+    replyBar.querySelector(".rb-who").textContent = `بترد على ${replyTarget.role === "user" ? "رسالتك" : who("assistant")}`;
+    replyBar.querySelector(".rb-text").textContent = replyTarget.excerpt || "صورة";
+    const th = replyBar.querySelector(".rb-thumb");
+    th.hidden = !replyTarget.thumb;
+    if (replyTarget.thumb) th.src = replyTarget.thumb;
+    replyBar.classList.toggle("q-user", replyTarget.role === "user");
+    replyBar.hidden = false;
+    chat.classList.add("replying"); // بيرفع زرار "انزل لآخر رسالة" فوق الشريط
+    input.focus({ preventScroll: true });
+  }
+  function clearReply() { replyTarget = null; replyBar.hidden = true; chat.classList.remove("replying"); }
+  $("replyCancel").addEventListener("click", () => { clearReply(); input.focus({ preventScroll: true }); });
+  replyBar.querySelector(".rb-body").addEventListener("click", () => replyTarget && jumpTo(replyTarget.ts));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !replyBar.hidden && drawer.getAttribute("aria-hidden") === "true" && cam.hidden) clearReply(); });
+  window.addEventListener("hashchange", clearReply);
+
+  // اسحب الرسالة ناحية الوسط على الموبايل = ريبلاي (نفس حركة واتساب)
+  function enableSwipe(r) {
+    const bubble = r.querySelector(".msg");
+    if (!bubble) return;
+    let x0 = 0, y0 = 0, dx = 0, active = false;
+    // اتجاه السحب: رسايل الطالب يمين الشاشة (RTL) → اسحب شمال، رسايل المدرس شمال → اسحب يمين
+    const dir = r.classList.contains("user") ? -1 : 1;
+    bubble.addEventListener("touchstart", (e) => { if (!r.dataset.ts) return; const t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; dx = 0; active = true; }, { passive: true });
+    bubble.addEventListener("touchmove", (e) => {
+      if (!active) return;
+      const t = e.touches[0], mx = (t.clientX - x0) * dir, my = Math.abs(t.clientY - y0);
+      if (my > 30 && my > Math.abs(mx)) { active = false; bubble.style.transform = ""; return; } // اسكرول عادي
+      dx = Math.max(0, Math.min(80, mx));
+      bubble.style.transform = `translateX(${dx * dir}px)`;
+      r.classList.toggle("swipe-ready", dx > 56);
+    }, { passive: true });
+    const end = () => {
+      if (!active) return;
+      active = false;
+      bubble.style.transition = "transform .2s var(--ease)";
+      bubble.style.transform = "";
+      setTimeout(() => (bubble.style.transition = ""), 220);
+      if (dx > 56 && r._msg) { if (navigator.vibrate) navigator.vibrate(12); startReply(r._msg); }
+      r.classList.remove("swipe-ready");
+      dx = 0;
+    };
+    bubble.addEventListener("touchend", end);
+    bubble.addEventListener("touchcancel", end);
   }
 
   route();

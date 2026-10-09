@@ -7,10 +7,11 @@
  *     question: "إيه الفرق بين الحمض والقاعدة؟",
  *     image: fileFromInput,             // اختياري (File / Blob)
  *     notebookId: savedNotebookId,      // فاضي في أول سؤال، وبعد كده نفس القيمة اللي رجعت
+ *     replyToTs: msg.ts,                // اختياري: ريبلاي على رسالة قديمة (userTs/botTs اللي رجعوا قبل كده)
  *     student: { student_id: "48213", student_name: "محمد علي", grade_name: "2 ثانوي" },
  *     onChunk: (fullTextSoFar) => { el.innerHTML = renderAnswer(fullTextSoFar); },
  *   });
- *   // r = { notebookId, text, error }
+ *   // r = { notebookId, text, error, userTs, botTs, replyTo }  ← خزّنوا userTs/botTs مع الرسايل عشان الريبلاي
  */
 
 const AI_API = "https://aiservice.magacademy.co";
@@ -22,7 +23,7 @@ export const AI_TEACHERS = {
 };
 
 /** يبعت سؤال ويقرا الرد streaming. */
-export async function askTeacher({ teacher, question, image, notebookId, student = {}, onChunk, signal }) {
+export async function askTeacher({ teacher, question, image, notebookId, replyToTs, student = {}, onChunk, signal }) {
   const fd = new FormData();
   fd.append("question", question && question.trim() ? question.trim() : "جاوب على الصورة");
   if (notebookId) fd.append("notebook_id", notebookId);                       // 🔌 نفس المحادثة
@@ -30,8 +31,9 @@ export async function askTeacher({ teacher, question, image, notebookId, student
     if (student[k]) fd.append(k, String(student[k]));                          // 🔌 بيانات الطالب
   }
   if (image) fd.append("image", image, image.name || "question.jpg");          // 🔌 صورة السؤال (≤ 10MB)
+  if (replyToTs) fd.append("reply_to_ts", replyToTs);                          // 🔌 ريبلاي: السيرفر بيجيب الرسالة بنفسه
 
-  let text = "", error = "", id = notebookId || null;
+  let text = "", error = "", id = notebookId || null, userTs = null, botTs = null, replyTo = null;
   try {
     const res = await fetch(AI_API + AI_TEACHERS[teacher].endpoint, { method: "POST", body: fd, signal });
     if (!res.ok || !res.body) throw new Error("HTTP " + res.status);
@@ -52,6 +54,8 @@ export async function askTeacher({ teacher, question, image, notebookId, student
         let ev;
         try { ev = JSON.parse(payload); } catch { continue; }
         if (ev.notebook_id) id = ev.notebook_id;             // أول event: احفظوه مع المحادثة
+        if (ev.user_ts) { userTs = ev.user_ts; replyTo = ev.reply_to || null; } // id رسالة الطالب + الاقتباس
+        if (ev.bot_ts) botTs = ev.bot_ts;                     // id رد المدرس
         if (ev.error) error = ev.error.replace(/^❌\s*/, "");
         if (ev.chunk) { text += ev.chunk; onChunk && onChunk(text); }
       }
@@ -61,7 +65,7 @@ export async function askTeacher({ teacher, question, image, notebookId, student
     error = "مش قادر أوصل للسيرفر دلوقتي. جرب تاني.";
   }
   if (!text.trim() && !error) error = "حصلت مشكلة ومقدرتش أرد. جرب تاني.";
-  return { notebookId: id, text, error: text.trim() ? "" : error };
+  return { notebookId: id, text, error: text.trim() ? "" : error, userTs, botTs, replyTo };
 }
 
 /**
