@@ -518,3 +518,20 @@ body.viewer-open { overflow: hidden; }
 .preview-rot svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .preview-rot:hover { background: var(--gold-deep); }
 .preview-rot:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
+
+/* 🔄 تنبيه الصورة المقلوبة */
+.orient-hint {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; margin: 0 6px 10px; padding: 10px 12px;
+  background: rgba(194, 150, 77, 0.12); border: 1px solid var(--gold); border-radius: 14px; animation: msg-in .25s var(--ease) both;
+}
+.orient-hint[hidden] { display: none; }
+.oh-icon { width: 22px; height: 22px; flex: none; fill: none; stroke: var(--gold-hi); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.oh-text { flex: 1 1 180px; font-size: 14px; color: var(--ivory); line-height: 1.5; }
+.oh-fix, .oh-skip { min-height: 40px; padding: 6px 14px; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.oh-fix { background: var(--leaf-soft); color: #1a1408; border: 0; }
+.oh-skip { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+.oh-fix:focus-visible, .oh-skip:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
+.preview.needs-turn img { height: 120px; box-shadow: 0 0 0 2px var(--gold); }
+.preview-rot.pulse { animation: rot-pulse 1.4s var(--ease) infinite; }
+@keyframes rot-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(253, 202, 124, 0.6); } 50% { box-shadow: 0 0 0 8px rgba(253, 202, 124, 0); } }
+@media (prefers-reduced-motion: reduce) { .preview-rot.pulse, .orient-hint { animation: none; } }

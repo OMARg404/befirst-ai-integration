@@ -15,7 +15,7 @@
 <!-- رموز الكيمياء بس (تحت 20KB): أرقام الصيغ من نفس عيلة IBM Plex، وأسهم الاتزان من Noto Sans Math -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;700&text=%E2%82%80%E2%82%81%E2%82%82%E2%82%83%E2%82%84%E2%82%85%E2%82%86%E2%82%87%E2%82%88%E2%82%89%E2%81%B0%C2%B9%C2%B2%C2%B3%E2%81%B4%E2%81%B5%E2%81%B6%E2%81%B7%E2%81%B8%E2%81%B9%E2%86%92%E2%87%84%C3%97%C2%B0%C2%B1%E2%88%92%2B&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&text=%E2%87%8C%E2%9F%B6&display=swap">
-<link rel="stylesheet" href="styles.css?v=21">
+<link rel="stylesheet" href="styles.css?v=22">
 <link rel="stylesheet" href="chatFormatter.css?v=12">
 </head>
 <body>
@@ -80,6 +80,13 @@
       <button type="button" class="preview-rot" id="rotateImg" aria-label="لف الصورة ٩٠ درجة" title="لف الصورة">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
       </button>
+    </div>
+    <!-- 🔄 تنبيه الصورة المقلوبة: الطالب يعدّلها بنفسه قبل ما يبعت -->
+    <div id="orientHint" class="orient-hint" hidden role="status">
+      <svg class="oh-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+      <span class="oh-text">الصورة شكلها مقلوبة — عدّلها عشان المدرس يقرا السؤال صح</span>
+      <button type="button" class="oh-fix" id="orientFix">اعدلها</button>
+      <button type="button" class="oh-skip" id="orientSkip">هي معدولة</button>
     </div>
     <div class="composer-row">
       <button type="button" class="icon-btn" id="cameraBtn" aria-label="صوّر السؤال بالكاميرا">
@@ -146,6 +153,6 @@
 <script src="formatMessage.js?v=12"></script>
 <script src="enhanceMessage.js?v=12"></script>
 <script src="highlightMessage.js?v=10"></script>
-<script src="app.js?v=18"></script>
+<script src="app.js?v=19"></script>
 </body>
 </html>

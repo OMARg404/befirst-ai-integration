@@ -467,6 +467,7 @@
   }
   $("rotateImg").addEventListener("click", async () => {
     if (!pendingFile) return;
+    orientToken++; hideOrientHint(); // الطالب بيلفها بنفسه
     pendingFile = await rotateFile(pendingFile, 90);
     previewImg.src = URL.createObjectURL(pendingFile);
   });
@@ -477,11 +478,42 @@
     previewImg.src = URL.createObjectURL(pendingFile);
     preview.hidden = false;
     updateSend();
+    checkOrientation(file);
   }
+
+  // 🔄 فحص اتجاه الصورة في الخلفية — لو مقلوبة بننبّه الطالب يعدّلها بنفسه (السيرفر بيعدّلها احتياطي لو اتجاهل)
+  // 🔌 API: POST /image-orientation (image) → { rotate: 0|90|180|270 } — فحص بس، من غير حفظ
+  const orientHint = $("orientHint");
+  let orientToken = 0, suggested = 0;
+  const hideOrientHint = () => { orientHint.hidden = true; suggested = 0; $("rotateImg").classList.remove("pulse"); preview.classList.remove("needs-turn"); };
+  async function checkOrientation(original) {
+    const token = ++orientToken;
+    hideOrientHint();
+    try {
+      const probe = await shrink(original, 2000); // الكشف أدق على 2000px
+      const fd = new FormData();
+      fd.append("image", probe, "check.jpg");
+      const res = await fetch(`${API}/image-orientation`, { method: "POST", body: fd });
+      const { rotate } = await res.json();
+      if (token !== orientToken || !pendingFile || ![90, 180, 270].includes(rotate)) return; // الطالب غيّر الصورة أو بعتها
+      suggested = rotate;
+      orientHint.hidden = false;
+      preview.classList.add("needs-turn");
+      $("rotateImg").classList.add("pulse");
+    } catch {}
+  }
+  $("orientFix").addEventListener("click", async () => {
+    if (!pendingFile || !suggested) return hideOrientHint();
+    pendingFile = await rotateFile(pendingFile, suggested);
+    previewImg.src = URL.createObjectURL(pendingFile);
+    hideOrientHint();
+    input.focus({ preventScroll: true });
+  });
+  $("orientSkip").addEventListener("click", () => { orientToken++; hideOrientHint(); });
   for (const inp of [fileInput, $("captureInput")]) {
     inp.addEventListener("change", () => { const f = inp.files[0]; inp.value = ""; attach(f); });
   }
-  $("removeImg").addEventListener("click", () => { pendingFile = null; preview.hidden = true; updateSend(); });
+  $("removeImg").addEventListener("click", () => { pendingFile = null; preview.hidden = true; orientToken++; hideOrientHint(); updateSend(); });
 
   // الكاميرا جوه الصفحة (الخلفية افتراضيًا)، ولو مش متاحة نفتح كاميرا الموبايل نفسها
   const cam = $("camera"), video = $("cameraVideo");
@@ -550,6 +582,7 @@
       input.style.height = "auto";
       pendingFile = null;
       preview.hidden = true;
+      orientToken++; hideOrientHint(); // لو بعت من غير ما يعدّل، السيرفر بيعدّلها احتياطي
       // أول سؤال: شاشة الترحيب بتتحول لمحادثة عادية تبدأ بتحية المدرس
       if (list.querySelector(".welcome")) { list.innerHTML = ""; fillBot(row("bot"), TEACHERS[c.teacher].greeting, { actions: false }); }
       const m = { role: "user", text, hadImage: !!file, localImage: file ? URL.createObjectURL(file) : null, reply_to: replyTarget };
