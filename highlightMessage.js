@@ -12,6 +12,7 @@
   const WORDLIKE = new Set(["In", "As", "Be", "He", "At", "No", "Am", "Pa", "Ho", "Es", "Po"]);
   // كلمات إنجليزي متكوّنة بالصدفة من رموز عناصر (O+K = "OK")
   const WORD_TOKENS = new Set(["OK", "ON", "BY", "HI", "IF", "OF", "US", "CV", "PC", "YES", "NOT", "CAN", "SCORE"]);
+  const NORMAL = { "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9", "⁺": "+", "⁻": "−" };
   const SUP = { 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" };
   const CHARGE = /\^?(?:[0-9]*[+\-−]|[+\-−][0-9]+)$|[⁺⁻⁰¹²³⁴-⁹]+$/;
   const SUB = { 0: "₀", 1: "₁", 2: "₂", 3: "₃", 4: "₄", 5: "₅", 6: "₆", 7: "₇", 8: "₈", 9: "₉" };
@@ -74,7 +75,8 @@
     if (charge) {
       const sup = document.createElement("sup");
       // الشحنة بالشكل المعتاد في الكتب: الرقم الأول وبعده الإشارة (SO₄²⁻)
-      const c = charge[0].replace("^", "").replace("-", "−");
+      // حروف الـ superscript (⁺⁻²) بتتحول لعادية جوه <sup> عشان تتعرض بنفس خط الصيغة
+      const c = charge[0].replace("^", "").replace(/[⁰¹²³⁴-⁹⁺⁻]/g, (x) => NORMAL[x]).replace("-", "−");
       sup.textContent = /^[+−]\d/.test(c) ? c.slice(1) + c[0] : c;
       bdi.appendChild(sup);
     }

@@ -479,7 +479,7 @@ button { -webkit-tap-highlight-color: transparent; }
    ألوان مختلفة في العائلة عشان كل نوع يبرز لوحده على الخلفية الغامقة، مش كله دهبي */
 .custom-message-content { --hl-chem: #7fdcc8; --hl-num: #9ccbff; --hl-date: #c7b3ff; --hl-ok: #93e0a2; --hl-bad: #f2a69c; }
 .msg.bot .custom-message-content strong { color: var(--gold-hi); }
-.hl-chem { color: var(--hl-chem); font-weight: 600; font-family: "IBM Plex Sans Arabic", "Segoe UI", sans-serif; letter-spacing: .01em; unicode-bidi: isolate; }
+.hl-chem { color: var(--hl-chem); font-weight: 600; font-family: "IBM Plex Sans", "Noto Sans Math", var(--ui); letter-spacing: .01em; unicode-bidi: isolate; }
 .hl-chem sup { font-size: .7em; }
 .hl-num { color: var(--hl-num); font-weight: 600; font-variant-numeric: tabular-nums; }
 .hl-date { color: var(--hl-date); font-weight: 600; }
@@ -488,4 +488,4 @@ button { -webkit-tap-highlight-color: transparent; }
 .hl-term { color: var(--ivory); background: rgba(245, 239, 224, 0.08); border-radius: 4px; padding: 0 3px; }
 .hl-ok { color: var(--hl-ok); }
 .hl-bad { color: var(--hl-bad); }
-.hl-arrow { color: var(--gold-hi); font-weight: 700; padding: 0 .15em; }
+.hl-arrow { color: var(--gold-hi); font-weight: 700; padding: 0 .15em; font-family: "IBM Plex Sans", "Noto Sans Math", var(--ui); }
