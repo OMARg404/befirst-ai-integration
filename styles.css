@@ -474,3 +474,18 @@ button { -webkit-tap-highlight-color: transparent; }
 @media (prefers-reduced-motion: reduce) { .row.flash .msg, .reply-bar { animation: none; } }
 .replying .to-bottom { bottom: 176px; } /* فوق شريط "بترد على" */
 .to-bottom[hidden] { display: none; }
+
+/* ═════════════ تلوين ذكي لردود المدرسين (highlightMessage.js) ═════════════
+   ألوان مختلفة في العائلة عشان كل نوع يبرز لوحده على الخلفية الغامقة، مش كله دهبي */
+.custom-message-content { --hl-chem: #7fdcc8; --hl-num: #9ccbff; --hl-date: #c7b3ff; --hl-ok: #93e0a2; --hl-bad: #f2a69c; }
+.msg.bot .custom-message-content strong { color: var(--gold-hi); }
+.hl-chem { color: var(--hl-chem); font-weight: 600; font-family: "IBM Plex Sans Arabic", "Segoe UI", sans-serif; letter-spacing: .01em; unicode-bidi: isolate; }
+.hl-chem sup { font-size: .7em; }
+.hl-num { color: var(--hl-num); font-weight: 600; font-variant-numeric: tabular-nums; }
+.hl-date { color: var(--hl-date); font-weight: 600; }
+.hl-cue { color: var(--gold-hi); font-weight: 700; box-shadow: inset 0 -0.42em 0 rgba(194, 150, 77, 0.22); border-radius: 2px; }
+.hl-opt { display: inline-block; min-width: 1.7em; text-align: center; padding: 0 .3em; border-radius: 6px; border: 1px solid var(--gold); color: var(--gold-hi); font-weight: 700; line-height: 1.45; }
+.hl-term { color: var(--ivory); background: rgba(245, 239, 224, 0.08); border-radius: 4px; padding: 0 3px; }
+.hl-ok { color: var(--hl-ok); }
+.hl-bad { color: var(--hl-bad); }
+.hl-arrow { color: var(--gold-hi); font-weight: 700; padding: 0 .15em; }

@@ -24,6 +24,7 @@
     jawad: {
       name: "م/محمد عبدالجواد",
       subject: "الكيمياء",
+      highlight: "chemistry", // نوع التلوين الذكي (highlightMessage.js)
       photo: "img/jawad.jpg?v=2",
       thumb: "img/jawad-sm.jpg?v=2",
       endpoint: "/ask-by-question-id-chemistry-stream",
@@ -33,6 +34,7 @@
     elbasha: {
       name: "م/أحمد الباشا",
       subject: "التاريخ",
+      highlight: "history",
       photo: "img/elbasha.jpg",
       thumb: "img/elbasha-sm.jpg",
       endpoint: "/ask-by-question-id-history-stream",
@@ -334,6 +336,8 @@
       return;
     }
     b.innerHTML = `<div class="custom-message-content">${toHtml(text, done)}</div>`;
+    // تلوين ذكي بالمعنى (صيغ/أرقام بوحداتها/سنين/كلمات مهمة). لو الملف مش متحمّل (متصفح قديم) الرد يتعرض عادي
+    if (window.highlightMessage && conv) window.highlightMessage(b.firstElementChild, TEACHERS[conv.teacher].highlight);
     if (done && actions) {
       const bar = document.createElement("div");
       bar.className = "msg-actions";

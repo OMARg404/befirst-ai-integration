@@ -134,6 +134,15 @@ data: [DONE]                                        ← خلص
   html = DOMPurify.sanitize(formatMessage(enhanceMessage(text)));   // formatMessage.js + enhanceMessage.js + chatFormatter.css
   ```
   ولفّوا الناتج في `<div class="custom-message-content">`.
+- **التلوين الذكي (اختياري ومنصوح بيه):** بعد ما تحطوا الـ HTML في الصفحة، نادوا `highlightMessage` على نفس العنصر عشان
+  الكلام المهم يبرز بألوان حسب المعنى: صيغ كيميائية (H₂SO₄، SO₄²⁻) وتوزيع إلكتروني (3d¹⁰)، أرقام بوحداتها
+  (2 mol، 25°C)، سنين وتواريخ (28 فبراير 1922)، كلمات زي "الإجابة الصحيحة/الخلاصة/السبب"، حروف الاختيارات، و✅/❌:
+  ```js
+  el.innerHTML = html;
+  highlightMessage(el, "chemistry");   // عبدالجواد = "chemistry" | الباشا = "history"   (highlightMessage.js)
+  ```
+  الألوان في `styles.css` (قسم "تلوين ذكي")، بالـ classes ‎`.hl-chem` / `.hl-num` / `.hl-date` / `.hl-cue` / `.hl-opt`...
+  آمن: بيشتغل على النص بس ومش بيضيف HTML، ولو المتصفح قديم ومش بيدعمه، الرد بيتعرض عادي من غير تلوين.
 
 #### ↩️ الريبلاي على رسالة قديمة (زي واتساب)
 الطالب يقدر يختار أي رسالة قديمة في نفس المحادثة (سؤاله أو رد المدرس، نص أو صورة) ويكمل عليها،
@@ -180,6 +189,7 @@ GET https://aiservice.magacademy.co/v2/chat/<notebook_id>
 | `app.js` | كل المنطق. **دوّروا على 🔌 — دي كل نقط الربط** | المدرسين في `TEACHERS` |
 | `formatMessage.js` + `chatFormatter.css` | تنسيق رسايل المدرسين (نفس اللي في منصتنا بالظبط) | ماتعدّلوش |
 | `enhanceMessage.js` | قوايم متداخلة وجداول (مبني على تحليل آلاف الردود الحقيقية) | ماتعدّلوش |
+| `highlightMessage.js` | تلوين ذكي للكلام المهم في الرد حسب المادة (صيغ، أرقام بوحداتها، سنين، كلمات مهمة) | ماتعدّلوش (الألوان في `styles.css`) |
 | `img/` | صور المدرسين واللوجو (من موقعكم) | — |
 | `examples/` | أمثلة الربط: Vue، iframe، API | — |
 
