@@ -494,3 +494,20 @@ button { -webkit-tap-highlight-color: transparent; }
 .hl-num { unicode-bidi: isolate; }
 .hl-chem small { font-size: .72em; opacity: .85; margin-inline-start: 1px; }
 .hl-arrow { color: var(--gold-hi); font-weight: 700; padding: 0 .15em; font-family: "IBM Plex Sans", "Noto Sans Math", var(--ui); }
+
+/* ═════════════ عارض الصور ═════════════ */
+.viewer { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, 0.92); backdrop-filter: blur(6px); display: grid; animation: viewer-in .2s var(--ease) both; }
+.viewer-stage { display: grid; place-items: center; overflow: hidden; padding: calc(64px + var(--safe-top)) 12px calc(56px + env(safe-area-inset-bottom)); touch-action: none; }
+.viewer img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px; box-shadow: 0 30px 80px -30px #000; transform-origin: center; cursor: zoom-in; user-select: none; -webkit-user-drag: none; touch-action: none; transition: transform .12s ease-out; background: #fff; }
+.viewer.zoomed img { cursor: grab; transition: none; }
+.viewer-bar { position: absolute; top: calc(12px + var(--safe-top)); inset-inline-start: 12px; display: flex; gap: 10px; }
+.viewer-btn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; background: rgba(20, 17, 10, 0.9); border: 1px solid var(--gold); color: var(--ivory); font-size: 24px; line-height: 1; text-decoration: none; }
+.viewer-btn svg { width: 20px; height: 20px; fill: none; stroke: var(--gold-hi); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.viewer-btn:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
+.viewer-hint { position: absolute; bottom: calc(16px + env(safe-area-inset-bottom)); inset-inline: 0; text-align: center; margin: 0; font-size: 13px; color: var(--muted); pointer-events: none; }
+.viewer.zoomed .viewer-hint { opacity: 0; }
+@keyframes viewer-in { from { opacity: 0; } }
+body.viewer-open { overflow: hidden; }
+.rb-thumb { cursor: zoom-in; }
+.history-date { color: var(--ivory); opacity: .8; }
+@media (prefers-reduced-motion: reduce) { .viewer, .viewer img { animation: none; transition: none; } }

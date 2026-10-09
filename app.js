@@ -91,11 +91,17 @@
     }
     if (old) del(K.legacy(t));
   }
-  const listChats = (t) => get(K.index(t), []).sort((a, b) => b.updated - a.updated);
-  function upsertChat(t, id, msgs) {
+  // الترتيب بتاريخ بداية المحادثة، الأحدث فوق (created = أول رسالة؛ القديمة من غيره بتاخده من أول ts أو آخر تعديل)
+  const startOf = (c) => c.created || c.updated || 0;
+  const listChats = (t) => get(K.index(t), []).sort((a, b) => startOf(b) - startOf(a));
+  const firstTs = (msgs) => { for (const m of msgs) { const v = Date.parse(m.ts); if (!isNaN(v)) return v; } return 0; };
+  function upsertChat(t, id, msgs, createdHint) {
     if (!id) return;
-    const idx = get(K.index(t), []).filter((c) => c.id !== id);
-    idx.unshift({ id, title: titleOf(msgs), updated: Date.now(), n: msgs.length });
+    const all = get(K.index(t), []);
+    const prev = all.find((c) => c.id === id);
+    const created = Math.min(...[prev && prev.created, firstTs(msgs), createdHint].filter((v) => v > 0).concat(Date.now()));
+    const idx = all.filter((c) => c.id !== id);
+    idx.unshift({ id, title: titleOf(msgs), created, updated: Date.now(), n: msgs.length });
     put(K.index(t), idx.slice(0, 100));
     put(K.chat(t, id), msgs.slice(-80));
   }
@@ -207,7 +213,7 @@
       });
       if (!msgs.length || conv !== c || busy) return;
       c.messages = msgs;
-      upsertChat(c.teacher, c.id, msgs);
+      upsertChat(c.teacher, c.id, msgs, Date.parse(data.created_at) || 0); // تاريخ البداية الحقيقي من السيرفر
       renderAll();
       renderHistory();
     } catch {}
@@ -235,11 +241,11 @@
     if (diff < 30) return "الشهر ده";
     return "أقدم";
   }
-  const timeLabel = (ts) => {
-    const g = groupLabel(ts), d = new Date(ts);
-    return g === "النهارده" || g === "إمبارح"
-      ? d.toLocaleTimeString("ar-EG", { hour: "numeric", minute: "2-digit" })
-      : d.toLocaleDateString("ar-EG", { day: "numeric", month: "short" });
+  // تاريخ بداية المحادثة كامل: "الخميس ٩ أكتوبر، ٩:٥٠ م" (والسنة لو مش السنة دي)
+  const startLabel = (ts) => {
+    const d = new Date(ts), sameYear = d.getFullYear() === new Date().getFullYear();
+    const day = d.toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long", ...(sameYear ? {} : { year: "numeric" }) });
+    return `${day}، ${d.toLocaleTimeString("ar-EG", { hour: "numeric", minute: "2-digit" })}`;
   };
 
   function renderHistory() {
@@ -257,7 +263,7 @@
     }
     let lastGroup = "";
     for (const c of chats) {
-      const g = groupLabel(c.updated);
+      const g = groupLabel(startOf(c));
       if (g !== lastGroup) {
         const h = document.createElement("div");
         h.className = "history-group";
@@ -271,7 +277,7 @@
       item.innerHTML = `
         <button class="history-open" type="button">
           <span class="history-title"></span>
-          <span class="history-meta"><span>${timeLabel(c.updated)}</span><span>${questions === 1 ? "سؤال واحد" : questions + " أسئلة"}</span></span>
+          <span class="history-meta"><span class="history-date" title="بداية المحادثة">${startLabel(startOf(c))}</span><span>${questions === 1 ? "سؤال واحد" : questions + " أسئلة"}</span></span>
         </button>
         <button class="history-del" type="button" aria-label="امسح المحادثة دي" title="امسح">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>
@@ -365,7 +371,7 @@
       im.className = "attached";
       im.src = src;
       im.alt = "صورة السؤال";
-      im.addEventListener("click", () => window.open(im.src, "_blank"));
+      im.addEventListener("click", () => openViewer(im.src, im.alt));
       b.appendChild(im);
     } else if (m.hadImage) {
       b.insertAdjacentHTML("beforeend", `<span class="photo-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>صورة سؤال</span>`);
@@ -717,6 +723,73 @@
     input.addEventListener("blur", () => setTimeout(fit, 300));
     fit();
   }
+
+  // ═════════════ عارض الصور جوه الصفحة (بدل تاب جديد) ═════════════
+  // صور الطالب + رسومات الـ AI + الصور الصغيرة في الاقتباس. تكبير بالصباعين/دبل تاب/عجلة الماوس، وسحب وهي متكبرة،
+  // وزرار الرجوع في الموبايل بيقفله من غير ما يخرج من الشات.
+  const viewer = $("viewer"), vImg = $("viewerImg"), vDl = $("viewerDownload");
+  let vs = { scale: 1, x: 0, y: 0 }, pointers = new Map(), pinch = null, lastTap = 0, pushed = false;
+  const applyV = () => { vImg.style.transform = `translate(${vs.x}px, ${vs.y}px) scale(${vs.scale})`; viewer.classList.toggle("zoomed", vs.scale > 1.01); };
+  const resetV = () => { vs = { scale: 1, x: 0, y: 0 }; applyV(); };
+  function zoomAt(scale, cx, cy) {
+    const r = vImg.getBoundingClientRect(), ox = cx - (r.left + r.width / 2), oy = cy - (r.top + r.height / 2);
+    const k = Math.max(1, Math.min(5, scale)) / vs.scale;
+    vs.x = (vs.x - ox) * k + ox; vs.y = (vs.y - oy) * k + oy; vs.scale *= k;
+    if (vs.scale <= 1.01) { vs.x = vs.y = 0; vs.scale = 1; }
+    applyV();
+  }
+  function openViewer(src, alt) {
+    if (!src) return;
+    vImg.src = src; vImg.alt = alt || "صورة";
+    vDl.href = src;
+    resetV();
+    viewer.hidden = false;
+    document.body.classList.add("viewer-open");
+    if (!pushed) { history.pushState({ viewer: true }, ""); pushed = true; } // زرار الرجوع = قفل
+    $("viewerClose").focus({ preventScroll: true });
+  }
+  function closeViewer(fromPop) {
+    if (viewer.hidden) return;
+    viewer.hidden = true;
+    document.body.classList.remove("viewer-open");
+    vImg.removeAttribute("src");
+    if (pushed) { pushed = false; if (!fromPop) history.back(); }
+  }
+  window.addEventListener("popstate", () => closeViewer(true));
+  $("viewerClose").addEventListener("click", () => closeViewer());
+  viewer.addEventListener("click", (e) => { if (e.target === viewer || e.target.classList.contains("viewer-stage")) closeViewer(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !viewer.hidden) closeViewer(); });
+  vImg.addEventListener("wheel", (e) => { e.preventDefault(); zoomAt(vs.scale * (e.deltaY < 0 ? 1.2 : 1 / 1.2), e.clientX, e.clientY); }, { passive: false });
+  vImg.addEventListener("pointerdown", (e) => {
+    vImg.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), s: vs.scale }; }
+    const now = Date.now();
+    if (pointers.size === 1 && now - lastTap < 300) zoomAt(vs.scale > 1.01 ? 1 : 2.5, e.clientX, e.clientY); // دبل تاب
+    lastTap = now;
+  });
+  vImg.addEventListener("pointermove", (e) => {
+    const p = pointers.get(e.pointerId); if (!p) return;
+    if (pointers.size === 2 && pinch) {
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const [a, b] = [...pointers.values()];
+      zoomAt(pinch.s * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d, (a.x + b.x) / 2, (a.y + b.y) / 2);
+    } else if (vs.scale > 1.01) { vs.x += e.clientX - p.x; vs.y += e.clientY - p.y; applyV(); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); }
+  });
+  const endPointer = (e) => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; };
+  vImg.addEventListener("pointerup", endPointer);
+  vImg.addEventListener("pointercancel", endPointer);
+
+  // رسومات الـ AI: زرار "تكبير" (⤢) من الفورماتر كان بيفتح تاب جديد، والصورة نفسها — الاتنين يفتحوا العارض
+  list.addEventListener("click", (e) => {
+    const zoomLink = e.target.closest('a.chat-image-action[title="تكبير"]');
+    const frameImg = e.target.closest(".chat-html-frame img, .chat-image-actions-wrap img");
+    const target = zoomLink ? zoomLink.getAttribute("href") : frameImg ? frameImg.currentSrc || frameImg.src : null;
+    if (!target) return;
+    e.preventDefault();
+    openViewer(target, frameImg ? frameImg.alt : "رسم توضيحي");
+  });
+  replyBar.querySelector(".rb-thumb").addEventListener("click", (e) => { e.stopPropagation(); openViewer(e.target.src, "الصورة اللي بترد عليها"); });
 
   route();
 })();
