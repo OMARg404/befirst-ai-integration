@@ -18,16 +18,17 @@
   const SUB = { 0: "₀", 1: "₁", 2: "₂", 3: "₃", 4: "₄", 5: "₅", 6: "₆", 7: "₇", 8: "₈", 9: "₉" };
 
   // صيغة مرشّحة: رموز عناصر + أرقام، وممكن مجموعة بين أقواس، وممكن شحنة في الآخر
-  const FORMULA = /(?<![A-Za-z])(?:\(?(?:[A-Z][a-z]?\d*)+\)?\d*){1,4}(?:\^?(?:[0-9]*[+\-−]|[+\-−][0-9]+)|[⁺⁻⁰¹²³⁴-⁹]+)?(?![A-Za-z0-9])/g;
+  // المعامل في الأول (6H2O) جزء من الصيغة، بس بيفضل رقم عادي مش subscript
+  const FORMULA = /(?<![A-Za-z0-9.])(?:\d{1,2}(?=[A-Z(]))?(?:\(?(?:[A-Z][a-z]?\d*)+\)?\d*){1,4}(?:\^?(?:[0-9]*[+\-−]|[+\-−][0-9]+)|[⁺⁻⁰¹²³⁴-⁹]+)?(?![A-Za-z0-9])/g;
   function isFormula(tok) {
     if (WORD_TOKENS.has(tok.toUpperCase()) && tok === tok.toUpperCase()) return false;
-    const core = tok.replace(CHARGE, "");
+    const core = tok.replace(/^\d+/, "").replace(CHARGE, "");
     const symbols = core.replace(/[()\d]/g, "").match(/[A-Z][a-z]?/g);
     if (!symbols || symbols.join("") !== core.replace(/[()\d]/g, "")) return false;
     if (!symbols.every((s) => ELEMENTS.has(s))) return false;
     // عنصر واحد من غير رقم ولا شحنة: الرموز بحرفين (Zn، Cu، Fe) آمنة، إلا اللي ممكن تبقى كلمة
     // إنجليزي. والرموز بحرف واحد ("I"، "C") بنسيبها.
-    if (symbols.length === 1 && !/\d/.test(core) && core === tok) return symbols[0].length === 2 && !WORDLIKE.has(symbols[0]);
+    if (symbols.length === 1 && !/\d/.test(core) && core === tok.replace(/^\d+/, "")) return symbols[0].length === 2 && !WORDLIKE.has(symbols[0]);
     return true;
   }
 
@@ -37,7 +38,12 @@
     "لاحظ", "ملحوظة", "ملاحظة", "مهم جدًا", "الكلمة المفتاح", "السبب", "النتيجة", "إذن",
   ];
   const AR_MONTHS = "يناير|فبراير|مارس|أبريل|ابريل|مايو|يونيو|يوليو|أغسطس|اغسطس|سبتمبر|أكتوبر|اكتوبر|نوفمبر|ديسمبر";
-  const UNITS = "مول|جم|جرام|كجم|لتر|مل|ملل|g|kg|mol|mL|L|°C|°|K|atm|ض\\.ج|kJ|J|M|كلفن|درجة";
+  // وحدة كاملة = أجزاء بينها / أو . أو · (M/s، g/mol، mol.L⁻¹.s⁻¹)، وكل جزء ممكن ليه أُس (cm³، s⁻¹، s^-1)
+  const UNIT_ATOM = "mmol|kmol|mol|kg|mg|g|cm³|cm3|dm³|dm3|m³|mL|L|M|min|hr|h|s|kJ|kcal|cal|J|kPa|Pa|atm|mmHg|°C|K|nm|cm|m|" +
+    "مول|جم|جرام|كجم|لتر|مل|ملل|ث|ثانية|دقيقة|ساعة|كلفن|ض\\.ج|جول|كيلوجول|درجة";
+  const UNIT_EXP = "(?:⁻?[¹²³]|\\^-?\\d)?";
+  const UNIT = `(?:${UNIT_ATOM})${UNIT_EXP}(?:\\s?[/.·∙]\\s?(?:${UNIT_ATOM})${UNIT_EXP}){0,3}`;
+  const NUMBER = "[-−]?\\d+(?:[.,]\\d+)?(?:\\s?×\\s?10\\^?[⁻\\-−]?\\d+)?";
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
   // ترتيب البدائل مهم: الأطول/الأدق الأول
@@ -49,8 +55,8 @@
       `(?<opt>\\((?:أ|ب|ج|د|ه|a|b|c|d)\\))`,
       `(?<date>\\d{1,2}\\s+(?:${AR_MONTHS})(?:\\s+\\d{3,4}\\s*(?:م|هـ)?)?)`,
       `(?<year>(?<![\\d.])(?:1[0-9]|20)\\d{2}\\s?(?:م|هـ|ق\\.م)?(?![\\d.]))`,
-      `(?<qty>(?<![\\w.])\\d+(?:[.,]\\d+)?\\s?(?:×\\s?10\\^?[⁻\\-−]?\\d+)?\\s?(?:${UNITS})(?![\\w\\u0621-\\u064A]))`,
-      `(?<num>(?<![\\w.])\\d+(?:[.,]\\d+)?%?(?![\\w]))`,
+      `(?<qty>(?<![\\w.])${NUMBER}\\s?${UNIT}(?![\\w\\u0621-\\u064A]))`,
+      `(?<num>(?<![\\w.\\-−])[-−]?\\d+(?:[.,]\\d+)?%?(?![\\w]))`,
       `(?<cue>(?<![\\u0621-\\u064A])(?:${CUES.map(esc).join("|")})(?![\\u0621-\\u064A]))`,
       `(?<arrow>→|⟶|⇌|⇄)`,
     ];
