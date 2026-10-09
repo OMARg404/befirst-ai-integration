@@ -139,14 +139,15 @@ data: [DONE]                                        ← خلص
   html = DOMPurify.sanitize(formatMessage(enhanceMessage(text)));   // formatMessage.js + enhanceMessage.js + chatFormatter.css
   ```
   ولفّوا الناتج في `<div class="custom-message-content">`.
-- **التلوين الذكي (اختياري ومنصوح بيه):** بعد ما تحطوا الـ HTML في الصفحة، نادوا `highlightMessage` على نفس العنصر عشان
-  الكلام المهم يبرز بألوان حسب المعنى: صيغ كيميائية (H₂SO₄، SO₄²⁻) وتوزيع إلكتروني (3d¹⁰)، أرقام بوحداتها
-  (2 mol، 25°C)، سنين وتواريخ (28 فبراير 1922)، كلمات زي "الإجابة الصحيحة/الخلاصة/السبب"، حروف الاختيارات، و✅/❌:
+- **التلوين الذكي (اختياري ومنصوح بيه):** بعد ما تحطوا الـ HTML في الصفحة، نادوا `highlightMessage` على نفس العنصر.
+  بيفهم *شكل* الكلام من غير قوايم: أي كلام لاتيني/أرقام وسط العربي حتة واحدة (0.6 M/s، 98 g/mol، 2H₂ + O₂ → 2H₂O،
+  ΔH = -286 kJ/mol، VSEPR) وبيتصنّف بشكله (معادلة/صيغة/كمية/مصطلح)، والعربي بتركيبه (عنوان قبل ":" في أول السطر،
+  اختيار بين قوسين، «مصطلح»، تاريخ بالشهر، ✅/❌):
   ```js
   el.innerHTML = html;
-  highlightMessage(el, "chemistry");   // عبدالجواد = "chemistry" | الباشا = "history"   (highlightMessage.js)
+  highlightMessage(el, "chemistry");   // عبدالجواد = "chemistry" | الباشا = "history" (تلميح للسنين بس)   (highlightMessage.js)
   ```
-  الألوان في `styles.css` (قسم "تلوين ذكي")، بالـ classes ‎`.hl-chem` / `.hl-num` / `.hl-date` / `.hl-cue` / `.hl-opt`...
+  الألوان في `styles.css` (قسم "تلوين ذكي")، بالـ classes ‎`.hl-chem` / `.hl-num` / `.hl-date` / `.hl-cue` / `.hl-opt` / `.hl-en`...
   آمن: بيشتغل على النص بس ومش بيضيف HTML، ولو المتصفح قديم ومش بيدعمه، الرد بيتعرض عادي من غير تلوين.
 
 #### ↩️ الريبلاي على رسالة قديمة (زي واتساب)

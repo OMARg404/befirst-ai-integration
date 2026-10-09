@@ -490,4 +490,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .hl-term { color: var(--ivory); background: rgba(245, 239, 224, 0.08); border-radius: 4px; padding: 0 3px; }
 .hl-ok { color: var(--hl-ok); }
 .hl-bad { color: var(--hl-bad); }
+.hl-en { color: var(--ivory); font-family: "IBM Plex Sans", var(--ui); font-weight: 500; unicode-bidi: isolate; }
+.hl-num { unicode-bidi: isolate; }
+.hl-chem small { font-size: .72em; opacity: .85; margin-inline-start: 1px; }
 .hl-arrow { color: var(--gold-hi); font-weight: 700; padding: 0 .15em; font-family: "IBM Plex Sans", "Noto Sans Math", var(--ui); }
