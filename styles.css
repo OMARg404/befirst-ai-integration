@@ -512,3 +512,9 @@ body.viewer-open { overflow: hidden; }
 .rb-thumb { cursor: zoom-in; }
 .history-date { color: var(--ivory); opacity: .8; }
 @media (prefers-reduced-motion: reduce) { .viewer, .viewer img { animation: none; transition: none; } }
+
+/* زرار لف الصورة قبل الإرسال */
+.preview-rot { position: absolute; bottom: -8px; inset-inline-start: -8px; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; background: var(--panel-2); border: 1px solid var(--gold); color: var(--gold-hi); }
+.preview-rot svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.preview-rot:hover { background: var(--gold-deep); }
+.preview-rot:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }

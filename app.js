@@ -447,6 +447,30 @@
       img.src = URL.createObjectURL(file);
     });
   }
+  // لف صورة 90/180/270 درجة مع عقارب الساعة (canvas) — لزرار اللف، ولما السيرفر يعدّل صورة مقلوبة
+  function rotateFile(file, deg) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement("canvas"), side = deg % 180 !== 0;
+        c.width = side ? img.height : img.width;
+        c.height = side ? img.width : img.height;
+        const g = c.getContext("2d");
+        g.translate(c.width / 2, c.height / 2);
+        g.rotate((deg * Math.PI) / 180);
+        g.drawImage(img, -img.width / 2, -img.height / 2);
+        c.toBlob((b) => resolve(b ? new File([b], "question.jpg", { type: "image/jpeg" }) : file), "image/jpeg", 0.9);
+      };
+      img.onerror = () => resolve(file);
+      img.src = URL.createObjectURL(file);
+    });
+  }
+  $("rotateImg").addEventListener("click", async () => {
+    if (!pendingFile) return;
+    pendingFile = await rotateFile(pendingFile, 90);
+    previewImg.src = URL.createObjectURL(pendingFile);
+  });
+
   async function attach(file) {
     if (!file) return;
     pendingFile = await shrink(file);
@@ -577,6 +601,14 @@
           // ids الرسايل على السيرفر: بيخلّوها قابلة للريبلاي فورًا من غير ريفريش
           if (ev.user_ts && userMsg) { userMsg.ts = ev.user_ts; if (ev.reply_to) userMsg.reply_to = ev.reply_to; setRowTs(userRow, ev.user_ts); }
           if (ev.bot_ts) botTs = ev.bot_ts;
+          // السيرفر عدّل صورة مقلوبة (utils/auto_orient.js) — صورة الطالب في الشات تتعدل هي كمان
+          if (ev.image_rotated && userMsg && file) {
+            rotateFile(file, ev.image_rotated).then((f) => {
+              userMsg.localImage = URL.createObjectURL(f);
+              const im = userRow && userRow.querySelector("img.attached");
+              if (im) im.src = userMsg.localImage;
+            });
+          }
           if (ev.error) errorMsg = ev.error;
           if (ev.chunk) { answer += ev.chunk; if (!frame) frame = requestAnimationFrame(paint); }
         }
