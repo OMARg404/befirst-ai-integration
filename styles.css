@@ -497,8 +497,9 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* ═════════════ عارض الصور ═════════════ */
 .viewer { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, 0.92); backdrop-filter: blur(6px); display: grid; animation: viewer-in .2s var(--ease) both; }
-.viewer-stage { display: grid; place-items: center; overflow: hidden; padding: calc(64px + var(--safe-top)) 12px calc(56px + env(safe-area-inset-bottom)); touch-action: none; }
-.viewer img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px; box-shadow: 0 30px 80px -30px #000; transform-origin: center; cursor: zoom-in; user-select: none; -webkit-user-drag: none; touch-action: none; transition: transform .12s ease-out; background: #fff; }
+/* المسرح بمقاس الشاشة بالظبط — من غيره max-height: 100% مابيشتغلش والصورة الطويلة بتتقص (كان بيظهر نصها) */
+.viewer-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: calc(64px + var(--safe-top)) 12px calc(48px + env(safe-area-inset-bottom)); touch-action: none; }
+.viewer img { max-width: 100%; max-height: 100%; max-height: calc(var(--app-h, 100dvh) - 112px - var(--safe-top) - env(safe-area-inset-bottom)); width: auto; height: auto; object-fit: contain; border-radius: 10px; box-shadow: 0 30px 80px -30px #000; transform-origin: center; cursor: zoom-in; user-select: none; -webkit-user-drag: none; touch-action: none; transition: transform .12s ease-out; background: #fff; }
 .viewer.zoomed img { cursor: grab; transition: none; }
 .viewer-bar { position: absolute; top: calc(12px + var(--safe-top)); inset-inline-start: 12px; display: flex; gap: 10px; }
 .viewer-btn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; background: rgba(20, 17, 10, 0.9); border: 1px solid var(--gold); color: var(--ivory); font-size: 24px; line-height: 1; text-decoration: none; }
