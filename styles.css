@@ -167,7 +167,9 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* ═════════════ شاشة المحادثة ═════════════ */
 /* الشات بعرض الشاشة والمحتوى في النص — عشان شريط التمرير على طرف الشاشة */
-.chat { display: flex; flex-direction: column; height: 100dvh; position: relative; --col: 860px; --gutter: max(16px, calc((100% - var(--col)) / 2)); }
+/* --app-h/--app-top بيتحسبوا من visualViewport (app.js): الجزء الظاهر فعلاً من الشاشة بعد الكيبورد.
+   fixed + translateY عشان iOS بيحرّك الصفحة لفوق لما الكيبورد يفتح، فبنمشي الشات معاه */
+.chat { display: flex; flex-direction: column; height: var(--app-h, 100dvh); position: fixed; inset: 0 0 auto 0; transform: translateY(var(--app-top, 0px)); --col: 860px; --gutter: max(16px, calc((100% - var(--col)) / 2)); }
 
 .chat-top {
   display: flex; align-items: center; gap: 10px; padding: calc(12px + var(--safe-top)) var(--gutter) 12px;

@@ -66,9 +66,14 @@ window.location.href = url.toString();   // أو window.open(url, "_blank")
 <iframe
   src="https://aiservice.magacademy.co/befirst-ai/?student_id=48213&student_name=محمد%20علي&grade_name=2%20ثانوي"
   allow="camera; clipboard-write"
-  style="width:100%; height:100vh; border:0;"
+  style="width:100%; height:100dvh; border:0;"
   title="الدعم العلمي AI"></iframe>
 ```
+
+> **📱 الكيبورد على الموبايل:** عشان الكيبورد مايغطيش خانة الكتابة جوه الـ iframe، خلّوا ارتفاعه `100dvh` (مش `100vh`)
+> وزوّدوا `interactive-widget=resizes-content` في الـ viewport بتاع صفحتكم:
+> `<meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">`
+> الصفحة نفسها (لما تتفتح لوحدها أو جوه iframe) بتظبط نفسها على الجزء الظاهر من الشاشة تلقائيًا.
 ⚠️ **`allow="camera"` ضروري** — من غيره زرار التصوير مش هيفتح الكاميرا جوه الصفحة (هيفتح كاميرا الموبايل كبديل).
 
 **مثال Vue جاهز:** `examples/AiSupportTab.vue` — حطوه كـ route/تاب في المنصة.

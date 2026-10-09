@@ -57,7 +57,7 @@ export default {
 </script>
 
 <style scoped>
-.ai-support-tab { width: 100%; height: calc(100vh - 64px); /* 🔌 طرح ارتفاع الـ navbar بتاعكم */ }
+.ai-support-tab { width: 100%; height: calc(100dvh - 64px); /* 🔌 طرح ارتفاع الـ navbar بتاعكم — dvh عشان الكيبورد على الموبايل */ }
 .ai-support-frame { width: 100%; height: 100%; border: 0; display: block; background: #050505; }
 .ai-support-login { text-align: center; padding: 48px 16px; color: #a39a88; }
 </style>

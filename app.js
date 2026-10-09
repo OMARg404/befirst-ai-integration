@@ -7,7 +7,7 @@
  * أو من الصفحة الأم بـ postMessage:
  *   iframe.contentWindow.postMessage({ type: "befirst-ai:student", student_id, student_name, grade_name }, "*")
  *   ⚠️ لو متضمّن كـ iframe لازم allow="camera" عشان زرار التصوير يفتح الكاميرا جوه الصفحة:
- *   <iframe src="..." allow="camera" style="width:100%;height:100vh;border:0"></iframe>
+ *   <iframe src="..." allow="camera" style="width:100%;height:100dvh;border:0"></iframe>
  *
  * المحادثات السابقة هنا **ديمو** (متخزنة في متصفح الطالب + GET /v2/chat للتجربة). في الإنتاج،
  * تخزين وعرض واسترجاع محادثات كل طالب مسؤولية منصة Be First عندها (README القسم 5).
@@ -695,6 +695,27 @@
     };
     bubble.addEventListener("touchend", end);
     bubble.addEventListener("touchcancel", end);
+  }
+
+  // ═════════════ الكيبورد على الموبايل ═════════════
+  // الشات ارتفاعه = الجزء الظاهر فعلاً من الشاشة (visualViewport) — من غيره الكيبورد بيغطي خانة الكتابة،
+  // لأن 100dvh مابيحسبش الكيبورد، وiOS بيحرّك الصفحة لفوق بدل ما يصغّرها.
+  const vv = window.visualViewport;
+  if (vv) {
+    const root = document.documentElement;
+    let wasNearBottom = true;
+    const fit = () => {
+      root.style.setProperty("--app-h", `${Math.round(vv.height)}px`);
+      root.style.setProperty("--app-top", `${Math.round(vv.offsetTop)}px`);
+      if (wasNearBottom && !chat.hidden) list.scrollTop = list.scrollHeight; // آخر رسالة تفضل ظاهرة فوق الكيبورد
+    };
+    vv.addEventListener("resize", () => { fit(); updateToBottom(); });
+    vv.addEventListener("scroll", fit);
+    list.addEventListener("scroll", () => { wasNearBottom = nearBottom(); }, { passive: true });
+    // قبل ما الكيبورد يفتح نسجّل الطالب كان تحت ولا بيقرا فوق
+    input.addEventListener("focus", () => { wasNearBottom = nearBottom(); setTimeout(fit, 300); });
+    input.addEventListener("blur", () => setTimeout(fit, 300));
+    fit();
   }
 
   route();
